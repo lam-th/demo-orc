@@ -22,20 +22,19 @@ wss.on('connection', function connection(ws) {
     let player = new PlayerData(uuidv1(), 0);
     player.ws = ws;
     player.key = KEY_CONNECTED;
-    player.order = userCount;
-    player.x = userCount == 1 ? -320 : 320;
+    player.order = userCount%2;
+    player.x = player.order == 1 ? -320 : 320;
     users[player.id] = player;
     ws.send(JSON.stringify({
         'id'  : player.id, 
         'x'   : player.x,
         'key' : player.key,
-        'order': userCount,
+        'order': player.order,
         'type' : 'ME'
     })); 
     
     for(let user_id in users) {
         let user = users[user_id];
-        console.log(user_id);
         if(user.ws != ws) {
             user.ws.send(JSON.stringify({
                 'id'  : player.id, 
@@ -58,13 +57,13 @@ wss.on('connection', function connection(ws) {
         let playerdata = JSON.parse(data);
         let pack = new Array();
         if(playerdata.type == KEY_INGAME) {
-            console.log('sent: ')
-            console.log(playerdata);
             for(let id in users) {
                 let user = users[id];
                 user.type = KEY_INGAME;
+                if (id == playerdata.id) {
+                    user.x = playerdata.x;
+                }
                 pack.push(playerdata);
-
             }
             for(let id in users) {
                 users[id].ws.send(JSON.stringify(
@@ -79,17 +78,24 @@ wss.on('connection', function connection(ws) {
         console.log('close .. ');
         console.log(message);
         console.log(wss.clients.length);
-
+        let leftId = '';
         for(let obj in users) {
             console.log(obj);
             if(users[obj].ws == ws) {
                 console.log("remove client --");
+                leftId = obj;
                 delete users[obj];
                 break;
             }
         }
-
-        userCount -= 1;
+        for(let id in users) {
+            let user = users[id];
+            user.ws.send(JSON.stringify({
+                'id': leftId,
+                'key': user.key,
+                'type': 'LEFT'
+            }))
+        }
         console.log('clients size : ' + Object.keys(users).length);
     });
     

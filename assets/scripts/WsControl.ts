@@ -22,8 +22,14 @@ export default class WsControl extends cc.Component {
         this.ws = new WebSocket("ws://127.0.0.1:8080");
 
         // websocket event
-        this.ws.onopen = evt => this.isConnected = true;
-        this.ws.onclose = evt => this.isConnected = false;
+        this.ws.onopen = evt => {
+            this.isConnected = true;
+        };
+
+        this.ws.onclose = evt => {
+            this.isConnected = false;
+        }
+
         this.ws.onmessage = evt => {
             console.log('data: ' + evt.data);
 
@@ -34,8 +40,6 @@ export default class WsControl extends cc.Component {
                     console.log('connected to server');
                 }
                 else if (data.type == 'RIVAL') {
-                    console.log(data);
-
                     let rival = cc.instantiate(this.playerPrefab);
                     rival.x = data.x;
                     rival.y = -150;
@@ -48,6 +52,12 @@ export default class WsControl extends cc.Component {
                 else if (data.type == INGAME) {
                     console.log(`player move: x = ${data.x}`);
                     this.rivalData.x = data.x;
+                }
+                else if (data.type == 'LEFT') {
+                    if (this.rivalData.id == data.id) {
+                        this.rivalData.node.destroy();
+                        this.rivalData = null;
+                    }
                 }
             }
 
