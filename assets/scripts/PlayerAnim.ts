@@ -1,3 +1,4 @@
+import ChatBubble from "./ChatBubble";
 
 const {ccclass, property} = cc._decorator;
 
@@ -9,8 +10,17 @@ export default class PlayerAnim extends cc.Component {
 
     isWalking: boolean = false;
 
+    @property(cc.Prefab)
+    chatBubble: cc.Prefab = null;
+
     public lookAt(dir: number) {
-        this.node.scaleX = dir;
+        this.anim.node.scaleX = dir;
+    }
+
+    public showChatBubble(message: string) {
+        let bubble = cc.instantiate(this.chatBubble);
+        bubble.setParent(this.node);
+        bubble.getComponent(ChatBubble).showMessage(message);
     }
 
     public startWalking(dir: number) {

@@ -49,6 +49,7 @@ wss.on('connection', function connection(ws) {
             ws.send(JSON.stringify({
                 'id'  : user.id, 
                 'x'   : user.x,
+                'dir' : user.dir,
                 'key' : user.key,
                 'order': user.order,
                 'type' : 'RIVAL'

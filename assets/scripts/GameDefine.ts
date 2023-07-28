@@ -5,6 +5,7 @@ export class PlayerData {
     x: number;
     dir: number;
     order: number;
+    message?: string;
     node: cc.Node;
 }
 

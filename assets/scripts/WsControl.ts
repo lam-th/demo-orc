@@ -20,7 +20,7 @@ export default class WsControl extends cc.Component {
 
     start() {
 
-        this.player = cc.find('Canvas/Player').getComponent(PlayerControl);
+        this.player = cc.find('Canvas/PlayerControl').getComponent(PlayerControl);
 
         this.ws = new WebSocket("ws://127.0.0.1:8080");
 
@@ -46,12 +46,12 @@ export default class WsControl extends cc.Component {
                     let rival = cc.instantiate(this.playerPrefab);
                     rival.x = data.x;
                     rival.y = -150;
-                    rival.scaleX = data.order == 1 ? 1 : -1;
                     rival.setParent(this.node.parent);
 
                     this.rivalData = data;
                     this.rivalData.node = rival;
                     this.rivalAnim = rival.getComponent(PlayerAnim);
+                    this.rivalAnim.lookAt(data.dir)
                 }
                 else if (data.type == INGAME) {
                     console.log(`player move: x = ${data.x}`);
@@ -69,13 +69,18 @@ export default class WsControl extends cc.Component {
             for(let i = 0; i < data.length; i++) {
                 if (data[i].id == this.rivalData.id) {
                     this.rivalData.node.x = data[i].x;
-                    // rival display
+                    // animation
                     if (data[i].dir != 0) {
                         this.rivalAnim.startWalking(data[i].dir);
                     }
                     else {
                         this.rivalAnim.stopWalking();
                     }
+                    //message
+                    if (data[i].message != undefined) {
+                        this.rivalAnim.showChatBubble(data[i].message);
+                    }
+                    break;
                 }
             }
         };

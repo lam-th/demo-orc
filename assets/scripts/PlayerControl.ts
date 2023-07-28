@@ -25,7 +25,7 @@ export default class PlayerControl extends cc.Component {
     initPlayer(data: PlayerData) {
         this.playerData = data;
         this.node.x = data.x;
-        this.playerAnim.lookAt(data.order == 1 ? 1 : -1);
+        this.playerAnim.lookAt(data.dir);
     }
     
     update(dt: number) {
@@ -37,12 +37,13 @@ export default class PlayerControl extends cc.Component {
         this.sendData(INGAME);
     }
 
-    public sendData(type: string) {
+    public sendData(type: string, message?: string) {
         if (this.ws == null) return;
         //prepare data
         this.playerData.x = this.node.x;
         this.playerData.type = type;
         this.playerData.dir = this.dir;
+        this.playerData.message = message;
         //send to server
         this.ws.send(JSON.stringify(this.playerData));
     }
@@ -63,5 +64,10 @@ export default class PlayerControl extends cc.Component {
         this.dir = 0;
         this.playerAnim.stopWalking();
         this.sendData(INGAME);
+    }
+
+    public chatMessage(message: string) {
+        this.sendData(INGAME, message);
+        this.playerAnim.showChatBubble(message);
     }
 }
