@@ -1,4 +1,5 @@
 import { INGAME, PlayerData } from "./GameDefine";
+import PlayerAnim from "./PlayerAnim";
 import WsControl from "./WsControl";
 
 const {ccclass, property} = cc._decorator;
@@ -13,6 +14,9 @@ export default class PlayerControl extends cc.Component {
     @property(WsControl)
     ws: WsControl = null;
 
+    @property(PlayerAnim)
+    playerAnim: PlayerAnim = null;
+
     onLoad() {
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
@@ -21,12 +25,14 @@ export default class PlayerControl extends cc.Component {
     initPlayer(data: PlayerData) {
         this.playerData = data;
         this.node.x = data.x;
-        this.node.scaleX = data.order == 1 ? 1 : -1;
+        this.playerAnim.lookAt(data.order == 1 ? 1 : -1);
     }
     
     update(dt: number) {
         if (this.dir == 0)
             return;
+            
+        this.playerAnim.startWalking(this.dir);
         this.node.x += this.speed * this.dir * dt;
         this.sendData(INGAME);
     }
@@ -36,6 +42,7 @@ export default class PlayerControl extends cc.Component {
         //prepare data
         this.playerData.x = this.node.x;
         this.playerData.type = type;
+        this.playerData.dir = this.dir;
         //send to server
         this.ws.send(JSON.stringify(this.playerData));
     }
@@ -54,5 +61,7 @@ export default class PlayerControl extends cc.Component {
 
     onKeyUp(evt: cc.Event.EventKeyboard) {
         this.dir = 0;
+        this.playerAnim.stopWalking();
+        this.sendData(INGAME);
     }
 }

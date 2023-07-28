@@ -1,4 +1,5 @@
 import { CONNECTED, INGAME, PlayerData } from "./GameDefine";
+import PlayerAnim from "./PlayerAnim";
 import PlayerControl from "./PlayerControl";
 
 const {ccclass, property} = cc._decorator;
@@ -13,7 +14,9 @@ export default class WsControl extends cc.Component {
     playerPrefab: cc.Prefab = null;
 
     player: PlayerControl = null;
+
     rivalData: PlayerData = null;
+    rivalAnim: PlayerAnim = null;
 
     start() {
 
@@ -48,10 +51,12 @@ export default class WsControl extends cc.Component {
 
                     this.rivalData = data;
                     this.rivalData.node = rival;
+                    this.rivalAnim = rival.getComponent(PlayerAnim);
                 }
                 else if (data.type == INGAME) {
                     console.log(`player move: x = ${data.x}`);
                     this.rivalData.x = data.x;
+                    this.rivalData.dir = data.dir;
                 }
                 else if (data.type == 'LEFT') {
                     if (this.rivalData.id == data.id) {
@@ -64,6 +69,13 @@ export default class WsControl extends cc.Component {
             for(let i = 0; i < data.length; i++) {
                 if (data[i].id == this.rivalData.id) {
                     this.rivalData.node.x = data[i].x;
+                    // rival display
+                    if (data[i].dir != 0) {
+                        this.rivalAnim.startWalking(data[i].dir);
+                    }
+                    else {
+                        this.rivalAnim.stopWalking();
+                    }
                 }
             }
         };

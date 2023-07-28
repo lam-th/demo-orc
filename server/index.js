@@ -5,8 +5,8 @@ class PlayerData {
     constructor(id, x) {
         this.id = id;
         this.x = x;
-        this.status = 0;
         this.key = '';
+        this.dir = 1;
         this.order = 0;
     }
 }
@@ -24,10 +24,12 @@ wss.on('connection', function connection(ws) {
     player.key = KEY_CONNECTED;
     player.order = userCount%2;
     player.x = player.order == 1 ? -320 : 320;
+    player.dir = player.order == 1 ? 1 : -1;
     users[player.id] = player;
     ws.send(JSON.stringify({
         'id'  : player.id, 
         'x'   : player.x,
+        'dir' : player.dir,
         'key' : player.key,
         'order': player.order,
         'type' : 'ME'
@@ -39,6 +41,7 @@ wss.on('connection', function connection(ws) {
             user.ws.send(JSON.stringify({
                 'id'  : player.id, 
                 'x'   : player.x,
+                'dir' : player.dir,
                 'key' : player.key,
                 'order': player.order,
                 'type' : 'RIVAL'
@@ -62,6 +65,7 @@ wss.on('connection', function connection(ws) {
                 user.type = KEY_INGAME;
                 if (id == playerdata.id) {
                     user.x = playerdata.x;
+                    user.dir = playerdata.dir;
                 }
                 pack.push(playerdata);
             }

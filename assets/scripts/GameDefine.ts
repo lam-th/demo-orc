@@ -3,6 +3,7 @@ export class PlayerData {
     key: string;
     type: string;
     x: number;
+    dir: number;
     order: number;
     node: cc.Node;
 }
