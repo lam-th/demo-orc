@@ -14,12 +14,14 @@ export default class WsControl extends cc.Component {
     @property(cc.Prefab)
     playerPrefab: cc.Prefab = null;
 
+    @property(cc.Node)
+    rivalsRoot: cc.Node = null;
+
     player: PlayerControl = null;
     rivals: {[key: string]: RivalData} = {}
 
     onDisable() {
         this.ws.close();
-        this.ws = null;
     }
 
     start() {
@@ -66,8 +68,8 @@ export default class WsControl extends cc.Component {
                 else if (data.type == 'RIVAL') {
                     let rival = cc.instantiate(this.playerPrefab);
                     rival.x = data.x;
-                    rival.y = -150;
-                    rival.setParent(this.node.parent);
+                    rival.y = -215;
+                    rival.setParent(this.rivalsRoot);
 
                     this.rivals[data.id] = new RivalData();
                     this.rivals[data.id].data = data;
@@ -106,7 +108,6 @@ export default class WsControl extends cc.Component {
                     if (data[i].message != undefined) {
                         rival.anim.showChatBubble(data[i].message);
                     }
-                    
                 }
             }
         };
