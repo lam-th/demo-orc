@@ -8,6 +8,7 @@ const {ccclass, property} = cc._decorator;
 export default class PlayerControl extends cc.Component {
 
     speed: number = 150;
+    status: string = 'idle';
     dir: number = 0;
     playerData: PlayerData;
 
@@ -22,14 +23,15 @@ export default class PlayerControl extends cc.Component {
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
     }
 
-    initPlayer(data: PlayerData) {
+    public initPlayer(data: PlayerData) {
         this.playerData = data;
         this.node.x = data.x;
         this.playerAnim.lookAt(data.dir);
+        this.node.active = true;
     }
     
     update(dt: number) {
-        if (this.dir == 0)
+        if (this.status == 'idle')
             return;
             
         this.playerAnim.startWalking(this.dir);
@@ -44,6 +46,7 @@ export default class PlayerControl extends cc.Component {
         this.playerData.x = this.node.x;
         this.playerData.type = type;
         this.playerData.dir = this.dir;
+        this.playerData.status = this.status;
         this.playerData.message = message;
         //send to server
         this.ws.send(JSON.stringify(this.playerData));
@@ -52,17 +55,19 @@ export default class PlayerControl extends cc.Component {
     onKeyDown(evt: cc.Event.EventKeyboard) {
         switch(evt.keyCode) {
             case cc.macro.KEY.right:
+                this.status = 'walk';
                 this.dir = 1;
             break;
 
-            case cc.macro.KEY.left: 
+            case cc.macro.KEY.left:
+                this.status = 'walk';
                 this.dir = -1;
             break;
         }
     }
 
     onKeyUp(evt: cc.Event.EventKeyboard) {
-        this.dir = 0;
+        this.status = 'idle';
         this.playerAnim.stopWalking();
         this.sendData(INGAME);
     }

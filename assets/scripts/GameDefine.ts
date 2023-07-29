@@ -1,12 +1,18 @@
+import PlayerAnim from "./PlayerAnim";
+
 export class PlayerData {
     id: string;
     key: string;
     type: string;
     x: number;
     dir: number;
-    order: number;
+    status: string;
     message?: string;
-    node: cc.Node;
+}
+
+export class RivalData {
+    data: PlayerData;
+    anim: PlayerAnim;
 }
 
 export class SocketData {

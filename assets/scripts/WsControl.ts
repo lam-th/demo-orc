@@ -1,4 +1,4 @@
-import { CONNECTED, INGAME, PlayerData } from "./GameDefine";
+import { CONNECTED, INGAME, PlayerData, RivalData } from "./GameDefine";
 import PlayerAnim from "./PlayerAnim";
 import PlayerControl from "./PlayerControl";
 import Popup from "./Popup";
@@ -15,9 +15,12 @@ export default class WsControl extends cc.Component {
     playerPrefab: cc.Prefab = null;
 
     player: PlayerControl = null;
+    rivals: {[key: string]: RivalData} = {}
 
-    rivalData: PlayerData = null;
-    rivalAnim: PlayerAnim = null;
+    onDisable() {
+        this.ws.close();
+        this.ws = null;
+    }
 
     start() {
 
@@ -66,39 +69,44 @@ export default class WsControl extends cc.Component {
                     rival.y = -150;
                     rival.setParent(this.node.parent);
 
-                    this.rivalData = data;
-                    this.rivalData.node = rival;
-                    this.rivalAnim = rival.getComponent(PlayerAnim);
-                    this.rivalAnim.lookAt(data.dir)
+                    this.rivals[data.id] = new RivalData();
+                    this.rivals[data.id].data = data;
+                    this.rivals[data.id].anim = rival.getComponent(PlayerAnim);
+                    this.rivals[data.id].anim.lookAt(data.dir)
                 }
                 else if (data.type == INGAME) {
                     console.log(`player move: x = ${data.x}`);
-                    this.rivalData.x = data.x;
-                    this.rivalData.dir = data.dir;
+                    let rival = this.rivals[data.id];
+                    if (rival != undefined) {
+                        rival.data.x = data.x;
+                        rival.data.dir = data.dir;
+                        rival.data.status = data.status;
+                    }
                 }
                 else if (data.type == 'LEFT') {
-                    if (this.rivalData.id == data.id) {
-                        this.rivalData.node.destroy();
-                        this.rivalData = null;
+                    if (this.rivals[data.id] != undefined) {
+                        this.rivals[data.id].anim.node.destroy();
+                        delete this.rivals[data.id];
                     }
                 }
             }
 
             for(let i = 0; i < data.length; i++) {
-                if (data[i].id == this.rivalData.id) {
-                    this.rivalData.node.x = data[i].x;
+                if (data[i].id != this.player.playerData.id) {
+                    let rival = this.rivals[data[i].id];
+                    rival.anim.node.x = data[i].x;
                     // animation
-                    if (data[i].dir != 0) {
-                        this.rivalAnim.startWalking(data[i].dir);
+                    if (data[i].status == 'walk') {
+                        rival.anim.startWalking(data[i].dir);
                     }
                     else {
-                        this.rivalAnim.stopWalking();
+                        rival.anim.stopWalking();
                     }
                     //message
                     if (data[i].message != undefined) {
-                        this.rivalAnim.showChatBubble(data[i].message);
+                        rival.anim.showChatBubble(data[i].message);
                     }
-                    break;
+                    
                 }
             }
         };

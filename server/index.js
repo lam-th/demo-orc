@@ -6,8 +6,8 @@ class PlayerData {
         this.id = id;
         this.x = x;
         this.key = '';
-        this.dir = 1;
-        this.order = 0;
+        this.dir = 0;
+        this.status = 'idle'
     }
 }
 const KEY_CONNECTED = 'connected';
@@ -22,40 +22,39 @@ wss.on('connection', function connection(ws) {
     let player = new PlayerData(uuidv1(), 0);
     player.ws = ws;
     player.key = KEY_CONNECTED;
-    player.order = userCount%2;
-    player.x = player.order == 1 ? -320 : 320;
-    player.dir = player.order == 1 ? 1 : -1;
-    users[player.id] = player;
+    player.x = Math.random()*640-320; // -320 -> 320
+    player.dir = Math.random() < 0.5 ? 1 : -1;
+    // sync to client
     ws.send(JSON.stringify({
         'id'  : player.id, 
         'x'   : player.x,
         'dir' : player.dir,
         'key' : player.key,
-        'order': player.order,
+        'status': 'idle',
         'type' : 'ME'
     })); 
-    
+    // notify other users
     for(let user_id in users) {
         let user = users[user_id];
-        if(user.ws != ws) {
-            user.ws.send(JSON.stringify({
-                'id'  : player.id, 
-                'x'   : player.x,
-                'dir' : player.dir,
-                'key' : player.key,
-                'order': player.order,
-                'type' : 'RIVAL'
-            })); 
-            ws.send(JSON.stringify({
-                'id'  : user.id, 
-                'x'   : user.x,
-                'dir' : user.dir,
-                'key' : user.key,
-                'order': user.order,
-                'type' : 'RIVAL'
-            })); 
-        }
+        user.ws.send(JSON.stringify({
+            'id'  : player.id, 
+            'x'   : player.x,
+            'dir' : player.dir,
+            'key' : player.key,
+            'status': player.status,
+            'type' : 'RIVAL'
+        })); 
+        ws.send(JSON.stringify({
+            'id'  : user.id, 
+            'x'   : user.x,
+            'dir' : user.dir,
+            'key' : user.key,
+            'status': user.status,
+            'type' : 'RIVAL'
+        })); 
     }
+    // cache 
+    users[player.id] = player;
 
     ws.on('message', data => {
         let playerdata = JSON.parse(data);
@@ -67,6 +66,7 @@ wss.on('connection', function connection(ws) {
                 if (id == playerdata.id) {
                     user.x = playerdata.x;
                     user.dir = playerdata.dir;
+                    user.status = playerdata.status;
                 }
                 pack.push(playerdata);
             }
