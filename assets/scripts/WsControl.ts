@@ -1,6 +1,7 @@
 import { CONNECTED, INGAME, PlayerData } from "./GameDefine";
 import PlayerAnim from "./PlayerAnim";
 import PlayerControl from "./PlayerControl";
+import Popup from "./Popup";
 
 const {ccclass, property} = cc._decorator;
 
@@ -25,12 +26,29 @@ export default class WsControl extends cc.Component {
         this.ws = new WebSocket("ws://127.0.0.1:8080");
 
         // websocket event
-        this.ws.onopen = evt => {
+        this.ws.onopen = () => {
             this.isConnected = true;
         };
 
         this.ws.onclose = evt => {
             this.isConnected = false;
+            this.ws = null;
+            if (evt.code == 3001) {
+                console.log('connection closed');
+            }
+            else {
+                console.log('connection error');
+            }
+        }
+
+        this.ws.onerror = evt => {
+            this.isConnected = false;
+            if (this.ws.readyState == 1) {
+                console.log('connection normal error: ' + evt.type);
+            }
+            Popup.instance.showPopup('Connect to server failed', () => {
+                cc.director.loadScene('menu');
+            })
         }
 
         this.ws.onmessage = evt => {

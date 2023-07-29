@@ -38,7 +38,8 @@ export default class PlayerControl extends cc.Component {
     }
 
     public sendData(type: string, message?: string) {
-        if (this.ws == null) return;
+        if (this.ws == null || !this.playerData) 
+            return;
         //prepare data
         this.playerData.x = this.node.x;
         this.playerData.type = type;
